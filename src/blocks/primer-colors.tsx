@@ -37,7 +37,7 @@ export default function (props: FileBlockProps) {
 
   return (
     <div className="Box relative">
-      <div className="Box-body">
+      <div className="Box-body overflow-auto">
         {isDirty && (
           <button
             className="absolute right-2 top-2 btn btn-primary"
@@ -50,8 +50,10 @@ export default function (props: FileBlockProps) {
         )}
         {Object.keys(modifiedColors).map((key) => (
           <div className="flex items-center" key={key}>
-            <div className="p-3 w-20">{key}</div>
-            <div className="flex">
+            <div className="p-3 w-20" style={{ flex: 0, minWidth: "5rem" }}>
+              {key}
+            </div>
+            <div className="flex" style={{ flex: 1 }}>
               {(Array.isArray(modifiedColors[key])
                 ? modifiedColors[key]
                 : [modifiedColors[key]]
