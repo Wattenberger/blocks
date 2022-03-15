@@ -25,24 +25,14 @@
     {
       "type": "file",
       "id": "file-block",
-      "title": "Example File Block",
-      "description": "A basic file block",
-      "entry": "/src/blocks/example-file-block/index.tsx",
+      "title": "GitHub Primer Colors",
+      "description": "View and edit colors in the GitHub Primer primitives repo",
+      "entry": "/src/blocks/primer-colors.tsx",
       "extensions": [
-        "*"
+        "ts",
+        "js"
       ],
-      "example_path": "https://github.com/facebook/react/blob/main/packages/react-dom/index.js"
-    },
-    {
-      "type": "folder",
-      "id": "folder-block",
-      "title": "Example Folder Block",
-      "description": "A basic folder block",
-      "entry": "/src/blocks/example-folder-block/index.tsx",
-      "extensions": [
-        "*"
-      ],
-      "example_path": "https://github.com/githubocto/flat"
+      "example_path": "https://github.com/primer/primitives/blob/main/data/colors/themes/light.ts"
     }
   ],
   "dependencies": {
@@ -51,6 +41,7 @@
     "@loadable/component": "^5.15.0",
     "@octokit/rest": "^18.12.0",
     "@types/lodash.uniqueid": "^4.0.6",
+    "d3-color": "^3.0.1",
     "git-url-parse": "^11.6.0",
     "lodash.uniqueid": "^4.0.1",
     "parse-static-imports": "^1.1.0",
