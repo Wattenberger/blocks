@@ -37,7 +37,7 @@ async function getFolderContent(
   const { tree: rawTree } = await res.json();
 
   const files = (rawTree as TreeItem[]).filter((item) => {
-    return item.path?.includes(path);
+    return !path || item.path?.startsWith(path + "/");
   });
 
   const tree = files.map((item) => {
