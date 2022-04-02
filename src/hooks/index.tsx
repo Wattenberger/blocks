@@ -31,7 +31,8 @@ async function getFolderContent(
 
   const res = await fetch(apiUrl, {
     headers: {
-      Accept: `Bearer ${PAT}`,
+      // Accept: `Bearer ${PAT}`,
+      Authorization: `token ${PAT}`,
     },
   });
   const { tree: rawTree } = await res.json();
@@ -67,7 +68,8 @@ async function getFolderContent(
   };
 }
 
-const PAT = import.meta.env.VITE_GITHUB_PAT;
+const PAT =
+  "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";
 
 export async function getFileContent(
   params: UseFileContentParams
@@ -82,7 +84,8 @@ export async function getFileContent(
     PAT
       ? {
           headers: {
-            Accept: `Bearer ${PAT}`,
+            Authorization: `token ${PAT}`,
+            // Accept: `Bearer ${PAT}`,
           },
         }
       : {}

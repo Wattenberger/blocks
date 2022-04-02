@@ -41,6 +41,9 @@ export default function (props: FolderBlockProps) {
             rootPath={`https://raw.githubusercontent.com/${context.owner}/${
               context.repo
             }/${context.sha || "HEAD"}/`}
+            linkRootPath={`https://github.com/${context.owner}/${
+              context.repo
+            }/blob/${context.sha || "HEAD"}/`}
           />
         ))}
       </div>
@@ -56,11 +59,13 @@ const imageExtensions = ["png", "jpg", "jpeg", "gif", "svg"];
 const Item = ({
   item,
   rootPath,
+  linkRootPath,
   searchTerm,
   depth = 0,
 }: {
   item: File;
   rootPath: string;
+  linkRootPath: string;
   searchTerm: string;
   depth?: number;
 }) => {
@@ -73,7 +78,12 @@ const Item = ({
     return null;
   if (isImage)
     return (
-      <div className="p-3 flex flex-col items-center hover:bg-gray-100">
+      <a
+        href={`${linkRootPath}${path}`}
+        className="block p-3 flex flex-col items-center hover:bg-gray-100"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         <div className="flex-1 flex items-center">
           <img
             className="max-w-[20em] max-h-[20em] block"
@@ -84,7 +94,7 @@ const Item = ({
         <div className="flex-none pt-1 text-xs text-gray-500 font-mono w-full text-center truncate">
           {name}
         </div>
-      </div>
+      </a>
     );
 
   const isFolder = type === "tree";
@@ -110,6 +120,7 @@ const Item = ({
             key={item.name}
             item={item}
             rootPath={rootPath}
+            linkRootPath={linkRootPath}
             searchTerm={searchTerm}
             depth={depth + 1}
           />
