@@ -15,7 +15,9 @@ export default function (props: FolderBlockProps) {
     <div className={tw("p-3")}>
       <div className={tw("relative")}>
         <svg
-          className={tw("absolute left-3 top-2 text-gray-400 fill-current")}
+          className={tw(
+            "absolute left-3 top-[0.85em] text-gray-400 fill-current"
+          )}
           viewBox="0 0 16 16"
           width="16"
           height="16"
@@ -26,7 +28,9 @@ export default function (props: FolderBlockProps) {
           ></path>
         </svg>
         <input
-          className={tw("form-control w-[calc(100%-1rem)] mb-3 mx-2 pl-5")}
+          className={tw(
+            "w-[calc(100%-1rem)] mb-3 mx-2 pl-5 py-2 rounded-xl border-gray-200 border"
+          )}
           placeholder="Search images"
           type="text"
           value={searchTerm}
