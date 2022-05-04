@@ -1,5 +1,6 @@
 import { FolderBlockProps, getNestedFileTree } from "@githubnext/utils";
 import { useMemo, useState } from "react";
+import { tw } from "twind";
 
 export default function (props: FolderBlockProps) {
   const { tree, context } = props;
@@ -11,10 +12,10 @@ export default function (props: FolderBlockProps) {
   );
 
   return (
-    <div className="p-3">
-      <div className="relative">
+    <div className={tw("p-3")}>
+      <div className={tw("relative")}>
         <svg
-          className="absolute left-3 top-2 text-gray-400 fill-current"
+          className={tw("absolute left-3 top-2 text-gray-400 fill-current")}
           viewBox="0 0 16 16"
           width="16"
           height="16"
@@ -25,14 +26,14 @@ export default function (props: FolderBlockProps) {
           ></path>
         </svg>
         <input
-          className="form-control w-[calc(100%-1rem)] mb-3 mx-2 pl-5"
+          className={tw("form-control w-[calc(100%-1rem)] mb-3 mx-2 pl-5")}
           placeholder="Search images"
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="flex w-full justify-center flex-wrap">
+      <div className={tw("flex w-full justify-center flex-wrap")}>
         {nestedTree.map((item) => (
           <Item
             key={item.name}
@@ -80,18 +81,22 @@ const Item = ({
     return (
       <a
         href={`${linkRootPath}${path}`}
-        className="block p-3 flex flex-col items-center hover:bg-gray-100"
+        className={tw("block p-3 flex flex-col items-center hover:bg-gray-100")}
         target="_blank"
         rel="noopener noreferrer"
       >
-        <div className="flex-1 flex items-center">
+        <div className={tw("flex-1 flex items-center")}>
           <img
-            className="max-w-[20em] max-h-[20em] block"
+            className={tw("max-w-[20em] max-h-[20em] block")}
             src={`${rootPath}${path}`}
             alt={name}
           />
         </div>
-        <div className="flex-none pt-1 text-xs text-gray-500 font-mono w-full text-center truncate">
+        <div
+          className={tw(
+            "flex-none pt-1 text-xs text-gray-500 font-mono w-full text-center truncate"
+          )}
+        >
           {name}
         </div>
       </a>
@@ -103,13 +108,21 @@ const Item = ({
     const isVisible = hasNestedImages(item);
     if (!isVisible) return null;
     return (
-      <div className="p-2 m-2 flex flex-wrap justify-center border border-gray-200 rounded-lg">
-        <h3 className="font-mono w-full flex items-center justify-center my-1 mx-1">
+      <div
+        className={tw(
+          "p-2 m-2 flex flex-wrap justify-center border border-gray-200 rounded-lg"
+        )}
+      >
+        <h3
+          className={tw(
+            "font-mono w-full flex items-center justify-center my-1 mx-1"
+          )}
+        >
           <svg
             viewBox="0 0 16 16"
             width="16"
             height="16"
-            className="mr-[0.3em] mb-[0.2em] text-gray-400 fill-current"
+            className={tw("mr-[0.3em] mb-[0.2em] text-gray-400 fill-current")}
           >
             <path d="M1.75 2.5a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25v-8.5a.25.25 0 00-.25-.25H7.5c-.55 0-1.07-.26-1.4-.7l-.9-1.2a.25.25 0 00-.2-.1H1.75zM0 2.75C0 1.784.784 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2a.25.25 0 00.2.1h6.75c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0114.25 15H1.75A1.75 1.75 0 010 13.25V2.75z"></path>
           </svg>

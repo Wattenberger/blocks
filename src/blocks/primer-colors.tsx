@@ -1,6 +1,7 @@
 import { FileBlockProps, getLanguageFromFilename } from "@githubnext/utils";
 import { useMemo, useState } from "react";
 import { hsl, rgb } from "d3-color";
+import { tw } from "twind";
 
 export default function (props: FileBlockProps) {
   const { content, onRequestUpdateContent } = props;
@@ -36,11 +37,11 @@ export default function (props: FileBlockProps) {
       : modifiedColors[selectedColor[0]]?.[selectedColor[1]];
 
   return (
-    <div className="Box relative">
-      <div className="Box-body overflow-auto">
+    <div className={tw(`Box relative`)}>
+      <div className={tw(`Box-body overflow-auto`)}>
         {isDirty && (
           <button
-            className="absolute right-2 top-2 btn btn-primary"
+            className={tw(`absolute right-2 top-2 btn btn-primary`)}
             onClick={() => {
               onUpdateContent();
             }}
@@ -49,11 +50,14 @@ export default function (props: FileBlockProps) {
           </button>
         )}
         {Object.keys(modifiedColors).map((key) => (
-          <div className="flex items-center" key={key}>
-            <div className="p-3 w-20" style={{ flex: 0, minWidth: "5rem" }}>
+          <div className={tw(`flex items-center`)} key={key}>
+            <div
+              className={tw(`p-3 w-20`)}
+              style={{ flex: 0, minWidth: "5rem" }}
+            >
               {key}
             </div>
-            <div className="flex" style={{ flex: 1 }}>
+            <div className={tw(`flex`)} style={{ flex: 1 }}>
               {(Array.isArray(modifiedColors[key])
                 ? modifiedColors[key]
                 : [modifiedColors[key]]
@@ -155,21 +159,25 @@ const Color = ({
   const textColor = getOffsetColor(value);
   return (
     <div
-      className="relative border-2 border-transparent m-[-2px] focus-within:border-black focus-within:z-10"
+      className={tw(
+        "relative border-2 border-transparent m-[-2px] focus-within:border-black focus-within:z-10"
+      )}
       style={{
         background: value,
         fontFamily: "Fira code",
       }}
     >
       {originalColor && originalColor !== value && (
-        <div className="absolute left-[2px] top-[2px] w-3 h-3">
+        <div className={tw("absolute left-[2px] top-[2px] w-3 h-3")}>
           <svg viewBox="0 0 1 1" width="100%" height="100%">
             <path d="M 0 0 L 1 0 L 0 1 Z" fill={originalColor} />
           </svg>
         </div>
       )}
       <input
-        className={`relative w-28 h-20 p-2 text-xs text-right pt-6 bg-transparent focus:outline-none`}
+        className={tw(
+          `relative w-28 h-20 p-2 text-xs text-right pt-6 bg-transparent focus:outline-none`
+        )}
         style={{ color: textColor }}
         onClick={() => onSelect()}
         onFocus={() => onSelect()}
@@ -182,7 +190,9 @@ const Color = ({
       />
       {selectedColor && (
         <div
-          className="absolute right-[0.6rem] top-2 text-[0.66em] font-bold tracking-widest"
+          className={tw(
+            "absolute right-[0.6rem] top-2 text-[0.66em] font-bold tracking-widest"
+          )}
           style={{
             color: selectedColor,
           }}

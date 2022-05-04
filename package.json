@@ -56,7 +56,8 @@
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
     "react-error-boundary": "^3.1.4",
-    "react-query": "^3.32.3"
+    "react-query": "^3.32.3",
+    "twind": "^0.16.17"
   },
   "devDependencies": {
     "@types/git-url-parse": "^9.0.1",
