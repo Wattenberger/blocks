@@ -8,7 +8,9 @@
   },
   "dependencies": {
     "@githubnext/blocks": "^1.0.0",
+    "d3-color": "^3.1.0",
     "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react-dom": "^18.1.0",
+    "twind": "^0.16.17"
   }
 }
