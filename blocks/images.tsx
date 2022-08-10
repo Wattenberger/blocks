@@ -1,9 +1,11 @@
 import { FolderBlockProps, getNestedFileTree } from "@githubnext/blocks";
 import { SearchIcon } from "@primer/octicons-react";
-import { FormControl, TextInput } from "@primer/react";
-import { useMemo, useState } from "react";
+import { TextInput } from "@primer/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { tw } from "twind";
+import { useDebouncedCallback } from 'use-debounce';
 
+const maxNumberOfImagesToRender = 300
 export default function (props: FolderBlockProps) {
   const { tree, context } = props;
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,25 +14,40 @@ export default function (props: FolderBlockProps) {
     () => getNestedFileTree(tree)?.[0]?.children || [],
     [tree]
   );
-  const filteredTree = useMemo(() => {
+  const [numberOfImages, setNumberOfImages] = useState(0);
+  const [filteredTree, setFilteredTree] = useState(nestedTree)
+
+  const updateFilteredTree = () => {
+    let numberOfImages = 0
     const searchTermLower = searchTerm.toLowerCase();
     const getFilteredItem = (item: File) => {
       const isFolder = item.type === "tree";
+      const startingIndex = numberOfImages;
       if (!isFolder) {
         if (searchTerm && !item.path.toLowerCase().includes(searchTermLower)) return null
         const extension = item.name.split(".").pop() || "";
         if (!imageExtensions.includes(extension)) return null
-        return item;
+        return { ...item, index: numberOfImages++ };
       }
       const children = item.children?.map((item) => getFilteredItem(item)).filter(Boolean)
       if (!children.length) return null
       return {
         ...item,
         children,
+        index: startingIndex,
       }
     };
-    return nestedTree.map((item) => getFilteredItem(item)).filter(Boolean);
-  }, [nestedTree, searchTerm]);
+    const newFilteredTree = getFilteredItem({ type: "tree", children: nestedTree }).children || []
+    setFilteredTree(newFilteredTree)
+    setNumberOfImages(numberOfImages)
+  }
+  const onSearch = useDebouncedCallback(updateFilteredTree, [searchTerm])
+  useEffect(() => {
+    onSearch()
+  }, [searchTerm])
+  useEffect(() => {
+    updateFilteredTree()
+  }, [nestedTree])
 
   return (
     <div className={tw("p-3")}>
@@ -62,13 +79,18 @@ export default function (props: FolderBlockProps) {
               }/blob/${context.sha || "HEAD"}/`}
           />
         ))}
+        {numberOfImages >= maxNumberOfImagesToRender && (
+          <p className={tw("flex w-full py-3 items-center justify-center text-center text-gray-500 italic")}>
+            + more images hidden for performance reasons. Search to see more.
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
 type FileTree = ReturnType<typeof getNestedFileTree>;
-type File = FileTree[0];
+type File = FileTree[0] & { index: number };
 
 const maxDepth = 3;
 const imageExtensions = ["png", "jpg", "jpeg", "gif", "svg"];
@@ -89,7 +111,8 @@ const Item = ({
 
   const isFolder = type === "tree";
 
-  if (!isFolder)
+  if (item.index >= maxNumberOfImagesToRender) return null;
+  if (!isFolder) {
     return (
       <a
         href={`${linkRootPath}${path}`}
@@ -113,7 +136,7 @@ const Item = ({
         </div>
       </a>
     );
-
+  }
 
   if (depth >= maxDepth) return null
 
