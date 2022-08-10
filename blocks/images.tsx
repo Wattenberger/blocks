@@ -14,18 +14,23 @@ export default function (props: FolderBlockProps) {
   );
   const filteredTree = useMemo(() => {
     const searchTermLower = searchTerm.toLowerCase();
-    const filterItem = (item: File) => {
+    const getFilteredItem = (item: File) => {
       const isFolder = item.type === "tree";
       if (!isFolder) {
-        if (searchTerm && !item.path.toLowerCase().includes(searchTermLower)) return false
+        if (searchTerm && !item.path.toLowerCase().includes(searchTermLower)) return null
         const extension = item.name.split(".").pop() || "";
-        return imageExtensions.includes(extension);
+        if (!imageExtensions.includes(extension)) return null
+        return item;
       }
-      return item.children?.some((item) => filterItem(item));
+      const children = item.children?.map((item) => getFilteredItem(item)).filter(Boolean)
+      if (!children.length) return null
+      return {
+        ...item,
+        children,
+      }
     };
-    return nestedTree.filter((item) => filterItem(item));
+    return nestedTree.map((item) => getFilteredItem(item)).filter(Boolean);
   }, [nestedTree, searchTerm]);
-  console.log(filteredTree)
 
   return (
     <div className={tw("p-3")}>
