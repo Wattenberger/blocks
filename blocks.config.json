@@ -15,5 +15,13 @@
     "description": "View and navigate to images within a folder",
     "entry": "blocks/images.tsx",
     "example_path": "https://github.com/primer/octicons/tree/main/icons"
+  },
+  {
+    "type": "folder",
+    "id": "contributions",
+    "title": "Contributions",
+    "description": "A bubble chart showing contributions over time within this folder.",
+    "entry": "blocks/contributions.tsx",
+    "example_path": "https://github.com/primer/octicons"
   }
 ]
