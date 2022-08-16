@@ -7,12 +7,16 @@
     "build": "blocks build"
   },
   "dependencies": {
+    "@codesandbox/sandpack-react": "^1.5.0",
     "@githubnext/blocks": "^2.0.3",
     "@primer/octicons-react": "^17.4.0",
     "@primer/react": "^35.5.0",
+    "console-feed": "@3.3.0",
     "d3-color": "^3.1.0",
+    "lz-string": "^1.4.4",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
+    "react-syntax-highlighter": "^15.5.0",
     "twind": "^0.16.17",
     "use-debounce": "^8.0.3"
   }
