@@ -39,6 +39,6 @@
     "description": "An interactive view of p5 docs",
     "entry": "blocks/p5-docs.tsx",
     "matches": [""],
-    "example_path": "https://github.com/p5/p5"
+    "example_path": "https://github.com/processing/p5.js"
   }
 ]
