@@ -262,6 +262,7 @@ const MethodItem = ({ item }: {
             onClick={() => {
               const command = item.data.attributes.example.replace(/\n\/\/[^\n]*/g, "")
               console.log(`%c${command}`, "color: #0969da; background: #ddf4ff; padding: 0.6em 1em")
+              // @esbuild-plugin-typescript-ignore
               const res = eval(command)
               console.log(res)
             }}>
@@ -281,6 +282,7 @@ const Sandbox = ({ content }: {
   const scrollingElement = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // @esbuild-plugin-typescript-ignore
     eval(content)
     console.log(chunk)
   }, [])
@@ -335,6 +337,7 @@ const ConsoleLog = ({ currentLog, submitIteration, onNewLog }: {
 
   useEffect(() => {
     try {
+      // @esbuild-plugin-typescript-ignore
       const res = eval(currentLog)
       console.log(`%c${currentLog}`, "color: #0969da; background: #ddf4ff; padding: 0.6em 1em")
       console.log(res)

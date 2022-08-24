@@ -31,5 +31,14 @@
     "description": "An interactive view of Lodash docs",
     "entry": "blocks/lodash-docs.tsx",
     "example_path": "https://github.com/lodash/lodash"
+  },
+  {
+    "type": "folder",
+    "id": "p5-docs",
+    "title": "p5 docs",
+    "description": "An interactive view of p5 docs",
+    "entry": "blocks/p5-docs.tsx",
+    "matches": [""],
+    "example_path": "https://github.com/p5/p5"
   }
 ]
