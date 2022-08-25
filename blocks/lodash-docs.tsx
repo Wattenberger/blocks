@@ -1,4 +1,4 @@
-import { FolderBlockProps } from "@githubnext/blocks";
+import { FileBlockProps, FolderBlockProps } from "@githubnext/blocks";
 import { SearchIcon } from "@primer/octicons-react";
 import { Button, TextInput } from "@primer/react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,7 +11,7 @@ import syntaxHighlighterStyle from "react-syntax-highlighter/dist/esm/styles/hlj
 
 
 export default function (props: FolderBlockProps) {
-  const { tree, context, onRequestGitHubData } = props;
+  const { tree, context, onRequestGitHubData, onNavigateToPath } = props;
   const [searchTerm, setSearchTerm] = useState("");
   const [code, setCode] = useState("");
   const [methods, setMethods] = useState<Method>([]);
@@ -116,6 +116,7 @@ export default function (props: FolderBlockProps) {
           <MethodItem
             key={item.name}
             item={item}
+            onNavigateToPath={onNavigateToPath}
           />
         ))}
       </div>
@@ -219,12 +220,21 @@ const Sidebar = ({ methods, searchTerm, setSearchTerm, onMethodClick }: {
   )
 }
 
-const MethodItem = ({ item }: {
+const MethodItem = ({ item, onNavigateToPath }: {
   item: Method
+  onNavigateToPath: FileBlockProps["onNavigateToPath"]
 }) => {
   return (
     <div className={tw("w-full p-6")} id={item.id}>
-      <h2 className={tw("text-xl font-bold mb-2")}>{item.name}</h2>
+      <div className={tw("w-full mb-2 flex items-center justify-between")}>
+        <h2 className={tw("text-xl font-bold")}>{item.name}</h2>
+        <a
+          className={tw("text-blue-500 underline text-sm")}
+          href="javascript:;"
+          onClick={() => onNavigateToPath(`${item.name}.js`)}>
+          View code
+        </a>
+      </div>
       <p className={tw("")}>{item.data.description}</p>
       <div className={tw("space-y-2 py-4")}>
         {["since", "param", "returns"].map(name => {
