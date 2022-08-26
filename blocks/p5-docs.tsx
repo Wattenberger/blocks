@@ -146,7 +146,7 @@ export default function (props: FolderBlockProps) {
   const scrollingElement = useRef<HTMLDivElement>(null);
 
   return (
-    <div className={tw("flex w-full h-[calc(100vh-3em)] overflow-hidden")}>
+    <div className={tw("flex w-full h-full overflow-hidden")}>
       <div ref={scrollingElement} className={tw("flex-1 p-5 h-full overflow-auto")}>
         <h1 className={tw("text-2xl font-bold mt-3 px-5")}>Methods in p5.js v{version}</h1>
         <TextInput
