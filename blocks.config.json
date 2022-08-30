@@ -58,5 +58,14 @@
     "entry": "blocks/p5-tutorial.tsx",
     "matches": ["docs/*"],
     "example_path": "https://github.com/wattenberger/p5.js/blob/main/docs/Color"
+  },
+  {
+    "type": "file",
+    "id": "contributors",
+    "title": "Contributors",
+    "description": "View contributors",
+    "entry": "blocks/contributors.tsx",
+    "matches": [".all-contributorsrc"],
+    "example_path": "https://github.com/wattenberger/p5.js/blob/main/.all-contributorsrc"
   }
 ]
