@@ -31,15 +31,21 @@ export default (props: FileBlockProps) => {
         leadingVisual={SearchIcon}
       />
       <Box style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${info.contributorsPerLine || 5}, 1fr)`,
-        gridGap: 10,
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
       }}>
         {info.contributors.map(contributor => {
           if (search && !contributor.name.toLowerCase().includes(lowerSearch)) return null
           return (
-            <a href={`http://github.com/${contributor.login}`} key={contributor.username} className={tw`flex flex-col items-center p-6 text-center text-sm`}>
-              <img src={contributor.avatar_url} style={{ marginBottom: "1em", width: info.imageSize || 100, height: info.imageSize || 100, borderRadius: "50%" }} />
+            <a
+              href={`http://github.com/${contributor.login}`}
+              key={contributor.username}
+              className={tw`flex flex-col items-center p-6 text-center text-sm`}
+              style={{ width: `minmax(5em, ${100 / (info.contributorsPerLine || 5) + "%"}, 100%)` }}>
+              <img src={contributor.avatar_url}
+                style={{ marginBottom: "1em", width: info.imageSize || 100, borderRadius: "50%" }}
+              />
               <Text>{contributor.name}</Text>
             </a>
           )
