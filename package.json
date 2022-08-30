@@ -30,8 +30,11 @@
     "prismjs": "^1.29.0",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
+    "react-markdown": "^8.0.3",
+    "react-scrollama": "^2.3.2",
     "react-simple-code-editor": "^0.13.0",
     "react-syntax-highlighter": "^15.5.0",
+    "rehype-highlight": "^5.0.2",
     "twind": "^0.16.17",
     "use-debounce": "^8.0.3"
   }

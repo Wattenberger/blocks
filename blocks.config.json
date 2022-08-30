@@ -49,5 +49,14 @@
     "entry": "blocks/p5-example.tsx",
     "matches": ["*.js"],
     "example_path": "https://github.com/wattenberger/p5.js/blob/main/examples/13_Motion/02_Linear_Motion.js"
+  },
+  {
+    "type": "file",
+    "id": "p5-tutorial",
+    "title": "p5.js tutorial",
+    "description": "View tutorials for p5.js",
+    "entry": "blocks/p5-tutorial.tsx",
+    "matches": ["docs/*"],
+    "example_path": "https://github.com/wattenberger/p5.js/blob/main/docs/Color"
   }
 ]

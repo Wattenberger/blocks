@@ -1,25 +1,21 @@
 import { FileBlockProps } from "@githubnext/blocks";
 import { Button, TextInput } from "@primer/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Scrollama, Step } from 'react-scrollama';
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from 'rehype-highlight'
 import { tw } from "twind";
 import { parse } from "comment-parser";
 import Editor from "./editor/index"
 import { ErrorBoundary } from "./ErrorBoundary";
-import { SearchIcon } from "@primer/octicons-react";
-import methods from "console-feed/lib/definitions/Methods";
-
+import "./github-markdown.css"
 
 export default function (props: FileBlockProps) {
   const { content, context, onRequestGitHubData } = props;
-  const [editedContent, setEditedContent] = useState(content);
-  useEffect(() => { setEditedContent(content); }, [content]);
-
   const [modules, setModules] = useState<Module>([]);
-  const [methodsById, setMethodsById] = useState<Record<string, Method>>({});
-  const [version, setVersion] = useState<string>("");
+  const [activeSectionIndex, setActiveSectionIndex] = useState(0);
   const [activeMethodId, setActiveMethodId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
 
   const updateContent = async () => {
     setIsLoading(true)
@@ -35,7 +31,6 @@ export default function (props: FileBlockProps) {
     } catch (e) {
       console.log("Could not find package.json, using latest release version");
     }
-    setVersion(version);
     const sourceCodeUrl = `https://cdnjs.cloudflare.com/ajax/libs/p5.js/${version}/p5.js`
     const sourceCode = await fetch(sourceCodeUrl)
       .then(res => res.text())
@@ -109,7 +104,6 @@ export default function (props: FileBlockProps) {
     }).filter(d => d.submodules.length)
 
     setModules(methodsArray)
-    setMethodsById(methodsById)
     setActiveMethodId(activeMethodId || Object.keys(methodsById)[0])
     setIsLoading(false)
 
@@ -145,15 +139,34 @@ export default function (props: FileBlockProps) {
     return { diagnosticMethods, keywords }
   }, [modules])
 
+  const sections = useMemo(() => {
+    return content.split("---").map((section) => {
+      const codeBlockRegex = /```(.*?)\n([\s\S]*?)\n```/g;
+      const codeBlocks = section.match(codeBlockRegex);
+      const code = codeBlocks?.pop()?.replace(codeBlockRegex, "$2") || ""
+      return {
+        content: section.replace(codeBlockRegex, ""),
+        code,
+      }
+    })
+  }, [content])
+
+  const code = sections[activeSectionIndex]?.code || "";
+
   return (
     <div className={tw("flex w-full h-full overflow-hidden")}>
-      {isLoading ? (
-        <p className={tw("flex w-full h-[60%] items-center justify-center text-center text-gray-500 italic py-20")}>
-          Loading...
-        </p>
-      ) : (
-        <Sandbox code={editedContent} diagnosticMethods={diagnosticMethods} keywords={keywords} />
-      )}
+      <div className={tw("flex-[1.2] h-full overflow-auto pb-60")}>
+        <Steps sections={sections} activeSectionIndex={activeSectionIndex} setActiveSectionIndex={setActiveSectionIndex} />
+      </div>
+      <div className={tw("flex-1 h-full overflow-auto shadow bg-gray-50")}>
+        {isLoading ? (
+          <p className={tw("flex w-full h-[60%] items-center justify-center text-center text-gray-500 italic py-20")}>
+            Loading...
+          </p>
+        ) : (
+          <Sandbox code={code} diagnosticMethods={diagnosticMethods} keywords={keywords} />
+        )}
+      </div>
     </div>
   );
 }
@@ -178,28 +191,29 @@ type Module = {
   }[]
 }
 
-const MethodItem = ({ item, isSelected, onSelect }: {
-  item: Method
-  isSelected: boolean
-  onSelect: () => void
+const Steps = ({ sections, activeSectionIndex, setActiveSectionIndex }: {
+  sections: any[],
+  activeSectionIndex: number,
+  setActiveSectionIndex: (section: number) => void
 }) => {
   return (
-    <Button id={item.name} onClick={onSelect} variant={isSelected ? "primary" : "invisible"}
-      active={isSelected}
-      className={tw`font-mono font-light`}
-      sx={{
-        color: isSelected ? "white" : "textMuted",
-        border: isSelected ? "1px solid" : "1px solid transparent",
-        borderColor: "transparent",
-        // backgroundColor: isSelected ? "accent.fg" : "transparent",
-        lineHeight: "1.5em",
-        padding: "0.5em 1em",
+    <Scrollama
+      offset={0.5}
+      onStepEnter={({ data }) => {
+        setActiveSectionIndex(data.index)
       }}>
-      {item.name}
-    </Button>
+      {sections.map((section, index) => (
+        <Step data={{ ...section, index }} key={index}>
+          <div className={tw("px-6 py-10 mb-20 min-h-[100vh]") + " markdown-body"}>
+            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+              {section.content}
+            </ReactMarkdown>
+          </div>
+        </Step>
+      ))}
+    </Scrollama>
   )
 }
-
 const Sandbox = ({ code, diagnosticMethods, keywords }: {
   code: string
   diagnosticMethods?: { name: string; message: string }[]
@@ -212,11 +226,11 @@ const Sandbox = ({ code, diagnosticMethods, keywords }: {
   }, [code])
 
   return (
-    <div className={tw`w-full h-full flex items-start justify-center`}>
+    <div className={tw`w-full h-full flex flex-col items-start justify-center`}>
       <ErrorBoundary errorKey={editedCode}>
         <ExampleRunner code={editedCode} />
       </ErrorBoundary>
-      <div className={tw`flex-1 p-7 pt-0 h-full flex-1 overflow-auto`}>
+      <div className={tw`flex-1 text-sm w-full flex-[1.5] overflow-auto`}>
         <Editor
           code={editedCode}
           onUpdateCode={setEditedCode}
@@ -293,6 +307,6 @@ const ExampleRunner = ({ code, noRender }: {
   }, [code])
 
   return (
-    <div className={tw`flex-1 h-full pt-3 pr-7 min-w-[100px] overflow-auto`} ref={sketchElement} />
+    <div className={tw`flex-1 w-full flex items-center justify-center p-3 overflow-auto`} ref={sketchElement} />
   )
 }
