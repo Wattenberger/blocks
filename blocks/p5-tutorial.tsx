@@ -3,6 +3,7 @@ import { Button, TextInput } from "@primer/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Scrollama, Step } from 'react-scrollama';
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from 'rehype-raw'
 import rehypeHighlight from 'rehype-highlight'
 import { tw } from "twind";
 import { parse } from "comment-parser";
@@ -207,7 +208,7 @@ const Steps = ({ sections, activeSectionIndex, setActiveSectionIndex }: {
       {sections.map((section, index) => (
         <Step data={{ ...section, index }} key={index}>
           <div className={tw("px-6 py-10 mb-20 min-h-[100vh]") + " markdown-body"}>
-            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+            <ReactMarkdown rehypePlugins={[rehypeHighlight, rehypeRaw]}>
               {section.content}
             </ReactMarkdown>
           </div>
@@ -264,7 +265,7 @@ const ExampleRunner = ({ code, version = "1.4.2" }: {
     </script>
   </head>
   <body>
-    <main>
+    <main style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
     </main>
   </body>
 </html>
