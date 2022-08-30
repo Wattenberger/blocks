@@ -5,7 +5,7 @@
     "title": "GitHub Primer Colors",
     "description": "View and edit colors in the GitHub Primer primitives repo",
     "entry": "blocks/primer-colors.tsx",
-    "extensions": ["ts", "js"],
+    "matches": ["*.ts", "*.js"],
     "example_path": "https://github.com/primer/primitives/blob/main/data/colors/themes/light.ts"
   },
   {
@@ -40,5 +40,14 @@
     "entry": "blocks/p5-docs.tsx",
     "matches": [""],
     "example_path": "https://github.com/processing/p5.js"
+  },
+  {
+    "type": "file",
+    "id": "p5-sandbox",
+    "title": "p5.js example",
+    "description": "View and edit p5.js code",
+    "entry": "blocks/p5-example.tsx",
+    "matches": ["*.js"],
+    "example_path": "https://github.com/wattenberger/p5.js/blob/main/examples/13_Motion/02_Linear_Motion.js"
   }
 ]

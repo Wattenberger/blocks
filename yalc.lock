@@ -1,0 +1,10 @@
+{
+  "version": "v1",
+  "packages": {
+    "@githubnext/blocks": {
+      "signature": "5310aedae508ab00f16b97116b563f8d",
+      "file": true,
+      "replaced": "^2.0.8"
+    }
+  }
+}

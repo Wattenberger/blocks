@@ -1,44 +1,25 @@
-import { FolderBlockProps } from "@githubnext/blocks";
+import { FileBlockProps } from "@githubnext/blocks";
 import { Button, TextInput } from "@primer/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { tw } from "twind";
 import { parse } from "comment-parser";
-import { highlight, languages } from 'prismjs/components/prism-core';
-import 'prismjs/components/prism-clike';
-import 'prismjs/components/prism-javascript';
-import Editor from 'react-simple-code-editor';
+import Editor from "./editor/index"
 import { ErrorBoundary } from "./ErrorBoundary";
-import "./prism-github.css";
 import { SearchIcon } from "@primer/octicons-react";
+import methods from "console-feed/lib/definitions/Methods";
 
 
-export default function (props: FolderBlockProps) {
-  const { tree, context, onRequestGitHubData } = props;
+export default function (props: FileBlockProps) {
+  const { content, context, onRequestGitHubData } = props;
+  const [editedContent, setEditedContent] = useState(content);
+  useEffect(() => { setEditedContent(content); }, [content]);
+
   const [modules, setModules] = useState<Module>([]);
   const [methodsById, setMethodsById] = useState<Record<string, Method>>({});
   const [version, setVersion] = useState<string>("");
   const [activeMethodId, setActiveMethodId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
-  const activeMethod = methodsById[activeMethodId || ""] || null;
-
-  const lowerSearch = searchTerm.toLowerCase()
-  const filteredModules = searchTerm ? modules.map((module) => {
-    return {
-      ...module,
-      submodules: module.submodules.map((submodule) => {
-        return {
-          ...submodule,
-          methods: submodule.methods.filter((method) => {
-            return method.name.toLowerCase().includes(lowerSearch);
-          })
-        }
-      }).filter((submodule) => submodule.methods.length > 0)
-    }
-  }).filter((module) => module.submodules.length > 0) : modules;
-
-
 
   const updateContent = async () => {
     setIsLoading(true)
@@ -139,69 +120,42 @@ export default function (props: FolderBlockProps) {
   }
   useEffect(() => {
     updateContent()
-  }, [tree, context.sha])
+  }, [context.sha])
 
-  const scrollingElement = useRef<HTMLDivElement>(null);
+  const { diagnosticMethods, keywords } = useMemo(() => {
+    let diagnosticMethods = []
+    let keywords = []
+    modules.forEach(module => {
+      module.submodules.forEach(submodule => {
+        submodule.methods.forEach(method => {
+          diagnosticMethods.push({
+            name: method.name,
+            message: `<h3><strong>${method.name}</strong></h3>\n${method.description}`,
+          })
+          keywords.push({
+            label: method.name,
+            type: "property",
+            detail: "p5: " + method.description.split(". ")[0]
+              // remove html tags
+              .replace(/<[^>]*>?/gm, '')
+          })
+        })
+      })
+    })
+    return { diagnosticMethods, keywords }
+  }, [modules])
+
+  console.log(diagnosticMethods)
 
   return (
     <div className={tw("flex w-full h-full overflow-hidden")}>
-      <div ref={scrollingElement} className={tw("flex-1 p-5 h-full overflow-auto")}>
-        <h1 className={tw("text-2xl font-bold mt-3 px-5")}>Methods in p5.js v{version}</h1>
-        <TextInput
-          className={tw("w-[calc(100%-2.5rem)] mb-2 mx-5 mt-3 mb-4")}
-          leadingVisual={SearchIcon}
-          size="large"
-          aria-label="Search methods"
-          placeholder="Search methods"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        {isLoading && (
-          <p className={tw("flex w-full h-[60%] items-center justify-center text-center text-gray-500 italic py-20")}>
-            Loading...
-          </p>
-        )}
-        {!isLoading && !filteredModules.length && (
-          <p className={tw("flex w-full h-[60%] items-center justify-center text-center text-gray-500 italic py-20")}>
-            No methods found{searchTerm ? ` that include ${searchTerm}` : ""}
-          </p>
-        )}
-        {!isLoading && filteredModules.map(module => (
-          <div className={tw`pt-4 pb-2 px-5`} key={module.name}>
-            <h2 className={tw`text-3xl font-bold mb-2`} id={module.name}>{module.name}</h2>
-            {module.submodules.map(submodule => (
-              <div className={tw`py-3`} key={submodule.name}>
-                {submodule.name !== module.name && (
-                  <h3 className={tw`text-lg font-bold`} id={submodule.name}>{submodule.name}</h3>
-                )}
-                <div className={tw`flex flex-wrap py-2`}>
-                  {submodule.methods.map(method => (
-                    <MethodItem
-                      key={method.id}
-                      item={method}
-                      isSelected={activeMethodId == method.id}
-                      onSelect={() => {
-                        setActiveMethodId(method.id)
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className={tw("w-[min(50em,50%)] pb-40 shadow-xl border-l border-gray-200 h-full overflow-auto")} key={activeMethodId}>
-        {activeMethod && (
-          <>
-            <ActiveMethodInfo method={activeMethod} />
-            <h3 className={tw("text-xl font-bold mt-5 mb-0 px-9")}>Examples</h3>
-            {activeMethod?.examples?.map((example, i) => (
-              <Sandbox code={example} key={i} />
-            ))}
-          </>
-        )}
-      </div>
+      {isLoading ? (
+        <p className={tw("flex w-full h-[60%] items-center justify-center text-center text-gray-500 italic py-20")}>
+          Loading...
+        </p>
+      ) : (
+        <Sandbox code={editedContent} diagnosticMethods={diagnosticMethods} keywords={keywords} />
+      )}
     </div>
   );
 }
@@ -248,30 +202,29 @@ const MethodItem = ({ item, isSelected, onSelect }: {
   )
 }
 
-const Sandbox = ({ code }: {
-  code: Code
+const Sandbox = ({ code, diagnosticMethods, keywords }: {
+  code: string
+  diagnosticMethods?: { name: string; message: string }[]
+  keywords?: string[]
 }) => {
-  const [editedCode, setEditedCode] = useState(code.code || "")
+  const [editedCode, setEditedCode] = useState(code || "")
 
   useEffect(() => {
-    setEditedCode(code.code || "")
+    setEditedCode(code || "")
   }, [code])
 
   return (
-    <div className={tw`w-full px-9 py-5 flex items-start justify-center`}>
+    <div className={tw`w-full h-full flex items-start justify-center`}>
       <ErrorBoundary errorKey={editedCode}>
-        <ExampleRunner code={editedCode} noRender={code.noRender} />
+        <ExampleRunner code={editedCode} />
       </ErrorBoundary>
-      <div className={tw`pr-7 flex-1 overflow-auto`}>
+      <div className={tw`flex-1 p-7 pt-0 h-full flex-1 overflow-auto`}>
         <Editor
-          value={editedCode}
-          onValueChange={code => setEditedCode(code)}
-          highlight={code => highlight(code, languages.js, 'js')}
-          padding={10}
-          style={{
-            fontFamily: "ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace",
-            fontSize: 16,
-          }}
+          code={editedCode}
+          onUpdateCode={setEditedCode}
+          language="javascript"
+          diagnosticMethods={diagnosticMethods}
+          keywords={keywords}
         />
       </div>
     </div >
@@ -311,12 +264,13 @@ const ExampleRunner = ({ code, noRender }: {
         "draw",
         "windowResized",
       ]
-      let prefixedCode = code
-        // prefix all p5 methods with `p.`
-        .replace(new RegExp(`(^|\n|[ ()])(${methods.join("|")})([ .(])`, "g"), "$1p.$2$3")
-        .replace(new RegExp(`(function )(${[...methods, ...p5Functions].join("|")})([ (])`, "g"), "p.$2 = function $3")
-        .replace(/((\n|\s)let |\sconst )/g, "\nvar ")
-        .replace(/assets\//g, "https://raw.githubusercontent.com/processing/p5.js/main/docs/yuidoc-p5-theme/assets/")
+      let prefixedCode = `var width = 700; var height = 500; let img;\n`
+        + code
+          // prefix all p5 methods with `p.`
+          .replace(new RegExp(`(^|\n|[ ()])(${methods.join("|")})([ .(])`, "g"), "$1p.$2$3")
+          .replace(new RegExp(`(function )(${[...methods, ...p5Functions].join("|")})([ (])`, "g"), "p.$2 = function $3")
+          .replace(/((\n|\s)let |\sconst )/g, "\nvar ")
+          .replace(/assets\//g, "https://raw.githubusercontent.com/processing/p5.js-website/main/src/data/examples/assets/")
       if (!noRender && !["p.draw =", "p.preload =", "p.setup ="].some(prefix => prefixedCode.includes(prefix))) {
         prefixedCode = `p.draw = function() {\n${prefixedCode}\n}`
       }
@@ -336,7 +290,7 @@ const ExampleRunner = ({ code, noRender }: {
   }, [code])
 
   return (
-    <div className={tw`flex-none sticky top-0 h-auto ${noRender ? "hidden" : "pt-3 pr-7 min-w-[100px]"}`} ref={sketchElement} />
+    <div className={tw`flex-1 h-full pt-3 pr-7 min-w-[100px] overflow-auto`} ref={sketchElement} />
   )
 }
 

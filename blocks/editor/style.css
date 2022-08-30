@@ -1,0 +1,64 @@
+.cm-line {
+  white-space: pre-wrap;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.cm-editor {
+  padding: 1em 1em 10em;
+  min-height: 100%;
+  margin: 0 auto;
+  outline: none !important;
+}
+
+.cm-editor div.cm-scroller {
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+    Liberation Mono, monospace;
+}
+
+.cm-editor div.cm-scroller {
+  line-height: 1.6em;
+}
+.cm-content {
+  max-width: 100%;
+}
+
+.cm-line {
+  white-space: pre-wrap;
+}
+
+.cm-editor div.cm-tooltip {
+  margin: 0 3em 0 0;
+  color: inherit;
+  box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+.cm-tooltip a {
+  color: #007bff;
+  text-decoration: underline;
+}
+.cm-diagnostic {
+  border-left: none !important;
+  padding-left: 0 !important;
+}
+.cm-editor div.cm-tooltip.cm-tooltip-autocomplete > ul > li {
+  padding: 0.5em 1em;
+  border-bottom: 1px solid #d0d7de;
+}
+.cm-editor div.cm-completionIcon {
+  width: 1.5em;
+  color: #007bff;
+}
+.cm-tooltip .cm-completionLabel {
+  display: inline-block;
+  min-width: 8em;
+  font-weight: 600;
+}
