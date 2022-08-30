@@ -152,7 +152,7 @@ export default function (props: FileBlockProps) {
           Loading...
         </p>
       ) : (
-        <Sandbox code={editedContent} diagnosticMethods={diagnosticMethods} keywords={keywords} />
+        <Sandbox code={editedContent} version={version} diagnosticMethods={diagnosticMethods} keywords={keywords} />
       )}
     </div>
   );
@@ -200,10 +200,11 @@ const MethodItem = ({ item, isSelected, onSelect }: {
   )
 }
 
-const Sandbox = ({ code, diagnosticMethods, keywords }: {
+const Sandbox = ({ code, diagnosticMethods, keywords, version }: {
   code: string
   diagnosticMethods?: { name: string; message: string }[]
   keywords?: string[]
+  version?: string
 }) => {
   const [editedCode, setEditedCode] = useState(code || "")
 
@@ -214,7 +215,7 @@ const Sandbox = ({ code, diagnosticMethods, keywords }: {
   return (
     <div className={tw`w-full h-full flex items-start justify-center`}>
       <ErrorBoundary errorKey={editedCode}>
-        <ExampleRunner code={editedCode} />
+        <ExampleRunner code={editedCode} version={version} />
       </ErrorBoundary>
       <div className={tw`flex-1 p-7 pt-0 h-full flex-1 overflow-auto`}>
         <Editor
@@ -228,71 +229,38 @@ const Sandbox = ({ code, diagnosticMethods, keywords }: {
     </div >
   )
 }
-const ExampleRunner = ({ code, noRender }: {
+const ExampleRunner = ({ code, version = "1.4.2" }: {
   code: string
-  noRender: boolean
+  version?: string
 }) => {
   const sketchElement = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!sketchElement.current || !code) return
-    sketchElement.current.innerHTML = "";
-
-    const sketchFunction = function (p) {
-      const methods = [...Object.keys(p), ...Object.keys(Object.getPrototypeOf(p))].filter(key => key !== "constructor")
-      const p5Functions = [
-        "mousePressed",
-        "mouseReleased",
-        "mouseClicked",
-        "mouseMoved",
-        "mouseDragged",
-        "mouseWheel",
-        "doubleClicked",
-        "touchStarted",
-        "touchMoved",
-        "touchEnded",
-        "keyPressed",
-        "keyReleased",
-        "keyTyped",
-        "deviceMoved",
-        "deviceTurned",
-        "deviceShaken",
-        "preload",
-        "setup",
-        "draw",
-        "windowResized",
-      ]
-      let prefixedCode = `var width = 700; var height = 500; let img;\n`
-        + code
-          // prefix all p5 methods with `p.`
-          .replace(new RegExp(`(^|\n|[ ()])(${methods.join("|")})([ .(])`, "g"), "$1p.$2$3")
-          .replace(new RegExp(`(function )(${[...methods, ...p5Functions].join("|")})([ (])`, "g"), "p.$2 = function $3")
-          .replace(/((\n|\s)let |\sconst )/g, "\nvar ")
-          .replace(/assets\//g, "https://raw.githubusercontent.com/processing/p5.js-website/main/src/data/examples/assets/")
-      if (!noRender && !["p.draw =", "p.preload =", "p.setup ="].some(prefix => prefixedCode.includes(prefix))) {
-        prefixedCode = `p.draw = function() {\n${prefixedCode}\n}`
+  const iframeContent = useMemo(() => {
+    return `
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/p5@${version}/lib/p5.js"></script>
+    <script type="text/javascript">
+      ${code
+        .replace(/assets\//g, "https://raw.githubusercontent.com/processing/p5.js-website/main/src/data/examples/assets/")
       }
-      p.preload = typeof p.preload === 'function' ? p.preload : function () { };
-      p.setup = typeof p.setup === 'function' ? p.setup : function () {
-        p.createCanvas(100, 100);
-        p.background(200);
-      };
-      prefixedCode += `\nwindow.removeSketch = function() { p.remove() }`
-      eval(prefixedCode);
-    };
-
-    try {
-      new window.p5(sketchFunction, sketchElement.current)
-    } catch (e) {
-      console.log(e);
-    }
-
-    return () => {
-      window.removeSketch?.()
-    }
+    </script>
+  </head>
+  <body>
+    <main>
+    </main>
+  </body>
+</html>
+`
   }, [code])
 
+
+  useEffect(() => {
+    if (!sketchElement.current) return
+    sketchElement.current.src = "data:text/html;charset=utf-8," + escape(iframeContent);
+  }, [iframeContent])
+
   return (
-    <div className={tw`flex-1 h-full pt-3 pr-7 min-w-[100px] overflow-auto`} ref={sketchElement} />
+    <iframe className={tw`flex-1 h-full pt-3 pr-7 min-w-[100px] overflow-auto`} ref={sketchElement} />
   )
 }
