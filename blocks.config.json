@@ -26,6 +26,15 @@
   },
   {
     "type": "folder",
+    "id": "communities",
+    "title": "Communities",
+    "description": "Explore the community health of an open-source repository - identify new & rising contributors, top committers, and more.",
+    "entry": "blocks/communities.tsx",
+    "example_path": "https://github.com/sveltejs/svelte",
+    "matches": [""]
+  },
+  {
+    "type": "folder",
     "id": "lodash-docs",
     "title": "Lodash docs",
     "description": "An interactive view of Lodash docs",
