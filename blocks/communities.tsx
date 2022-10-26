@@ -541,7 +541,7 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
   highlightedUser: string
   setHighlightedUser: (user: string) => void
 }) => {
-  const [type, setType] = useState<null | "newcomer" | "code warrior" | "admin" | "rising contributor">(null)
+  const [type, setType] = useState<null | "newcomer" | "code warrior" | "admin" | "rising">(null)
   const [sort, setSort] = useState<"total contributions" | "recent">("total contributions")
 
   const filteredContributors = useMemo(() => {
@@ -551,7 +551,7 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
       if (type === "newcomer") return d.isNewcomer
       if (type === "code warrior") return d.isCodeWarrior
       if (type === "admin") return d.isAdministrator
-      if (type === "rising contributor") return d.isRising
+      if (type === "rising") return d.isRising
     })
   }, [data, type])
 
@@ -572,15 +572,15 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
 
   return (
     <div className={tw("flex flex-col items-center")}>
-      <div className={tw("w-full flex items-center justify-between px-2")}>
-        <ButtonGroup>
-          {[null, "newcomer", "code warrior", "admin", "rising contributor"].map(t => (
+      <div className={tw("w-full flex flex-wrap items-center justify-between px-2 -my-1")}>
+        <ButtonGroup className={tw("my-1")}>
+          {[null, "newcomer", "code warrior", "admin", "rising"].map(t => (
             <Button key={t} className={tw("!inline-block")} variant={type === t ? "primary" : "default"} onClick={() => setType(t)}>
-              {t ? `${titleCase(t)}s` : "All"}
+              {t ? `${titleCase(t)}${t !== "rising" ? "s" : ""}` : "All"}
             </Button>
           ))}
         </ButtonGroup>
-        <div className={tw("flex items-center")}>
+        <div className={tw("flex items-center my-1")}>
           <SortDescIcon className={tw("mr-2 text-gray-600")} />
           <ButtonGroup className={tw("ml-auto")}>
             {["total contributions", "recent"].map(s => (
@@ -652,7 +652,7 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
                     {d.isRising && (
                       <Label variant="done">
                         <ArrowUpRightIcon className={tw("mr-1")} />
-                        Rising Contributor
+                        Rising
                       </Label>
                     )}
                   </div>
