@@ -1,6 +1,6 @@
 import { FileBlockProps } from "@githubnext/blocks";
 import { Endpoints } from "@octokit/types";
-import { ArrowUpRightIcon, GitCommitIcon, GitPullRequestIcon, IssueOpenedIcon, SortDescIcon } from "@primer/octicons-react";
+import { ArrowUpRightIcon, CodeIcon, GitCommitIcon, GitPullRequestIcon, IssueOpenedIcon, ReplyIcon, SortDescIcon } from "@primer/octicons-react";
 import { Button, ButtonGroup, Label } from "@primer/react";
 import { scaleLinear } from "d3-scale";
 import { area, curveMonotoneX, line } from "d3-shape";
@@ -17,6 +17,7 @@ export default (props: FileBlockProps) => {
   const { context, tree, onRequestGitHubData } = props;
   const [monthlyData, setMonthlyData] = useState<MonthData[]>([])
   const [contributors, setContributors] = useState([])
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<null | string>(null)
 
@@ -24,14 +25,14 @@ export default (props: FileBlockProps) => {
     setError(null)
     setIsLoading(true)
 
-    const getPaginatedRes = async (url, params = {}, dateAccessor = (d: any) => d.date) => {
+    const getPaginatedRes = async (url, params = {}, dateAccessor?: (d: any) => Date) => {
       try {
         console.log(`Loading page ${params?.page || 1} of ${url}`)
         const res = await onRequestGitHubData(url, { ...params, per_page: 100 });
-        const lastDate = new Date(dateAccessor(res.slice(-1)[0]))
+        const lastDate = dateAccessor && new Date(dateAccessor(res.slice(-1)[0]))
         if (
           res.length === 100
-          && lastDate >= months[0]
+          && (!lastDate || lastDate >= months[0])
           && +(params.page || 1) < MAX_PAGES
         ) {
           const nextRes = await getPaginatedRes(url, {
@@ -47,21 +48,55 @@ export default (props: FileBlockProps) => {
         return [];
       }
     };
+
+    const user = await onRequestGitHubData(`/user`)
+    const { login } = user as Endpoints["GET /user"]["response"]["data"]
+    console.log(login)
+    const userRepos = await getPaginatedRes(
+      `/users/${login}/repos`,
+      {
+        visibility: "public",
+        affiliation: "owner,organization_member",
+        per_page: 100,
+      }
+    )
+    const adminRepos = userRepos.filter((repo: any) => repo.permissions.admin)
+    const repoFullName = `${context.owner}/${context.repo}`.toLowerCase()
+    const isAdmin = adminRepos.some((repo: any) => repo.full_name.toLowerCase() === repoFullName)
+    setIsAdmin(isAdmin)
+    console.log(userRepos, adminRepos, isAdmin)
+
     const allIssues: Endpoints["GET /repos/{owner}/{repo}/issues"]["response"]["data"] = await getPaginatedRes(
       `/repos/${context.owner}/${context.repo}/issues`,
       { state: "all", },
-      d => d.created_at
+      d => d?.created_at
     );
+    const allIssueComments = await Promise.all(allIssues.map(async (issue) => {
+      const comments = await getPaginatedRes(
+        `/repos/${context.owner}/${context.repo}/issues/${issue.number}/comments`,
+        {},
+        d => d?.created_at
+      );
+      return comments;
+    }));
     const allCommits: Endpoints["GET /repos/{owner}/{repo}/commits"]["response"]["data"] = await getPaginatedRes(
       `/repos/${context.owner}/${context.repo}/commits`,
       {},
-      d => d.commit.author.date
+      d => d?.commit.author.date
     );
     const allPRs: Endpoints["GET /repos/{owner}/{repo}/pulls"]["response"]["data"] = await getPaginatedRes(
       `/repos/${context.owner}/${context.repo}/pulls`,
       { state: "all", },
-      d => d.created_at
+      d => d?.created_at
     );
+    const allPRComments = await Promise.all(allPRs.map(async (pr) => {
+      const comments = await getPaginatedRes(
+        `/repos/${context.owner}/${context.repo}/pulls/${pr.number}/comments`,
+        {},
+        d => d?.created_at
+      );
+      return comments;
+    }));
 
     const getDataPerUser = (
       data: any[],
@@ -92,11 +127,23 @@ export default (props: FileBlockProps) => {
       issue => issue.title,
       issue => issue.created_at,
     );
+    const issueCommenters = getDataPerUser(
+      allIssueComments,
+      comment => comment?.user?.login,
+      comment => comment.body,
+      comment => comment.created_at,
+    );
     const prCreators = getDataPerUser(
       allPRs,
       pr => pr?.user?.login,
       pr => pr.title,
       pr => pr.created_at,
+    );
+    const prCommenters = getDataPerUser(
+      allPRComments,
+      comment => comment?.user?.login,
+      comment => comment.body,
+      comment => comment.created_at,
     );
 
     let allActivity = {}
@@ -108,9 +155,17 @@ export default (props: FileBlockProps) => {
       if (!allActivity[user]) allActivity[user] = []
       allActivity[user] = [...allActivity[user], ...issueCreators[user].map((commit) => ({ ...commit, type: "issue" }))]
     })
+    Object.keys(issueCommenters).forEach((user) => {
+      if (!allActivity[user]) allActivity[user] = []
+      allActivity[user] = [...allActivity[user], ...issueCommenters[user].map((commit) => ({ ...commit, type: "issue" }))]
+    })
     Object.keys(prCreators).forEach((user) => {
       if (!allActivity[user]) allActivity[user] = []
       allActivity[user] = [...allActivity[user], ...prCreators[user].map((pr) => ({ ...pr, type: "pr" }))]
+    })
+    Object.keys(prCommenters).forEach((user) => {
+      if (!allActivity[user]) allActivity[user] = []
+      allActivity[user] = [...allActivity[user], ...prCommenters[user].map((pr) => ({ ...pr, type: "pr" }))]
     })
 
     const contributors = Object.keys(allActivity).map((user) => {
@@ -126,7 +181,8 @@ export default (props: FileBlockProps) => {
       })
       const isNewcomer = new Date(firstActivity.date) >= months.slice(-1)[0]
       const isCodeWarrior = activity.filter(d => d.type === "commit").length > 10
-      const isAdministrator = activity.filter(d => ["issue", "pr"].includes(d.type)).length > 10
+      // const isIssueHelper = activity.filter(d => ["issue", "pr"].includes(d.type)).length > 10
+      const isIssueHelper = activity.filter(d => d.type === "issue").length > 10
       const monthsWithActivity = monthlyContributions.filter(c => c > 0)
       const lastMonthActivity = monthlyContributions.slice(-1)[0]
       const getAverage = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length
@@ -144,7 +200,7 @@ export default (props: FileBlockProps) => {
         monthlyContributions,
         isNewcomer,
         isCodeWarrior,
-        isAdministrator,
+        isIssueHelper,
         isRising,
       }
     })
@@ -215,7 +271,9 @@ export default (props: FileBlockProps) => {
     <div className={tw("w-full h-full flex items-center")}>
       <div className={tw("flex-none h-full overflow-auto")}>
         <div className={tw("p-3 ")}>
-          <Timeline data={monthlyData} highlightedUser={highlightedUser} />
+          <Timeline data={monthlyData}
+          // highlightedUser={highlightedUser}
+          />
         </div>
       </div>
       <div className={tw("flex-1 h-full overflow-auto pb-40 flex justify-center")}>
@@ -250,7 +308,7 @@ type Contributor = {
   activity: Activity[]
   isNewcomer: boolean
   isCodeWarrior: boolean
-  isAdministrator: boolean
+  isIssueHelper: boolean
   isRising: boolean
 }
 type MonthData = {
@@ -541,7 +599,7 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
   highlightedUser: string
   setHighlightedUser: (user: string) => void
 }) => {
-  const [type, setType] = useState<null | "newcomer" | "code warrior" | "admin" | "rising">(null)
+  const [type, setType] = useState<null | "newcomer" | "code warrior" | "inquiry architect" | "rising contributor">(null)
   const [sort, setSort] = useState<"total contributions" | "recent">("total contributions")
 
   const filteredContributors = useMemo(() => {
@@ -550,8 +608,8 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
     return filteredData.filter((d, i) => {
       if (type === "newcomer") return d.isNewcomer
       if (type === "code warrior") return d.isCodeWarrior
-      if (type === "admin") return d.isAdministrator
-      if (type === "rising") return d.isRising
+      if (type === "inquiry architect") return d.isIssueHelper
+      if (type === "rising contributor") return d.isRising
     })
   }, [data, type])
 
@@ -574,7 +632,7 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
     <div className={tw("flex flex-col items-center")}>
       <div className={tw("w-full flex flex-wrap items-center justify-between px-2 -my-1")}>
         <ButtonGroup className={tw("my-1")}>
-          {[null, "newcomer", "code warrior", "admin", "rising"].map(t => (
+          {[null, "newcomer", "code warrior", "inquiry architect", "rising contributor"].map(t => (
             <Button key={t} className={tw("!inline-block")} variant={type === t ? "primary" : "default"} onClick={() => setType(t)}>
               {t ? `${titleCase(t)}${t !== "rising" ? "s" : ""}` : "All"}
             </Button>
@@ -619,16 +677,10 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
                   <div className={tw("mt-2 text-sm font-medium text-center")}>
                     {d.user}
                   </div>
-                  {isNew ? (
-                    <div className={tw("mt-1 text-sm font-medium text-center text-green-500")}>
-                      New contributor
-                    </div>
-                  ) : (
-                    <div className={tw("mt-1 text-sm text-gray-600 text-center")}>
-                      Joined {timeFormat("%b %Y")(new Date(d.firstActivity.date))}
-                    </div>
-                  )}
-                  <div className={tw("mt-3 w-full text-sm text-gray-600 flex items-center justify-center space-x-6 font-mono text-xs")}>
+                  <div className={tw("mt-1 text-sm text-gray-600 text-center")}>
+                    Joined {timeFormat("%b %Y")(new Date(d.firstActivity.date))}
+                  </div>
+                  {/* <div className={tw("mt-3 w-full text-sm text-gray-600 flex items-center justify-center space-x-6 font-mono text-xs")}>
                     <div className={tw("flex flex-col items-center")}>
                       <span style={{ color: colorsByTypeByType["commit"]["oldNew"] }}>
                         <GitCommitIcon className={tw("mb-1")} />
@@ -647,16 +699,36 @@ const Contributors = ({ data, highlightedUser, setHighlightedUser }: {
                       </span>
                       {d.activity.filter(d => d.type === "pr").length}
                     </div>
-                  </div>
-                  <div className={tw("mt-3 w-full flex items-center justify-center min-h-[1.3em]")}>
-                    {d.isRising && (
-                      <Label variant="done">
-                        <ArrowUpRightIcon className={tw("mr-1")} />
-                        Rising
-                      </Label>
-                    )}
-                  </div>
-                  <ActivitySparkline data={d.monthlyContributions} maxCount={maxContributionsPerMonth} />
+                  </div> */}
+                  {(d.isRising || d.isCodeWarrior || d.isIssueHelper || d.isNewcomer) && (
+                    <div className={tw("mt-3 w-full flex items-center flex-wrap justify-center min-h-[1.3em]")}>
+                      {d.isRising && (
+                        <Label variant="done" className={tw("m-1")}>
+                          <ArrowUpRightIcon className={tw("mr-1")} />
+                          Rising
+                        </Label>
+                      )}
+                      {d.isIssueHelper && (
+                        <Label variant="accent" className={tw("m-1")}>
+                          <ReplyIcon className={tw("mr-1")} />
+                          Inquiry Architect
+                        </Label>
+                      )}
+                      {d.isCodeWarrior && (
+                        <Label variant="sponsors" className={tw("m-1")}>
+                          <CodeIcon className={tw("mr-1")} />
+                          Code Warrior
+                        </Label>
+                      )}
+                      {isNew && (
+                        <Label variant="success" className={tw("m-1")}>
+                          <ReplyIcon className={tw("mr-1")} />
+                          New Contributor
+                        </Label>
+                      )}
+                    </div>
+                  )}
+                  {/* <ActivitySparkline data={d.monthlyContributions} maxCount={maxContributionsPerMonth} /> */}
                 </div>
               </motion.div>
             )
