@@ -76,5 +76,14 @@
     "entry": "blocks/contributors.tsx",
     "matches": [".all-contributorsrc"],
     "example_path": "https://github.com/wattenberger/p5.js/blob/main/.all-contributorsrc"
+  },
+  {
+    "type": "file",
+    "id": "demo-style-guide",
+    "title": "Style Guide for Demo",
+    "description": "View the style guide for the Blocks demo",
+    "entry": "blocks/demo-style-guide.tsx",
+    "matches": ["global.css"],
+    "example_path": "https://github.com/githubnext/blocks-tutorial/blob/main/global.css"
   }
 ]
