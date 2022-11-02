@@ -83,7 +83,7 @@
     "title": "Style Guide for Demo",
     "description": "View the style guide for the Blocks demo",
     "entry": "blocks/demo-style-guide.tsx",
-    "matches": ["global.css"],
+    "matches": ["*.css"],
     "example_path": "https://github.com/githubnext/blocks-tutorial/blob/main/global.css"
   }
 ]
