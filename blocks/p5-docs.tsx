@@ -50,7 +50,9 @@ export default function (props: FolderBlockProps) {
       });
       const decodedPackageJson = atob(packageJson.content);
       const packageJsonContent = JSON.parse(decodedPackageJson);
-      version = packageJsonContent.version;
+      if (packageJsonContent.name === "p5") {
+        version = packageJsonContent.version || version;
+      }
     } catch (e) {
       console.log("Could not find package.json, using latest release version");
     }
