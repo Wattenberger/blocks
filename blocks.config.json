@@ -18,14 +18,6 @@
   },
   {
     "type": "folder",
-    "id": "contributions",
-    "title": "Contributions",
-    "description": "A bubble chart showing contributions over time within this folder.",
-    "entry": "blocks/contributions.tsx",
-    "example_path": "https://github.com/primer/octicons"
-  },
-  {
-    "type": "folder",
     "id": "communities",
     "title": "Communities",
     "description": "Explore the community health of an open-source repository - identify new & rising contributors, top committers, and more.",
